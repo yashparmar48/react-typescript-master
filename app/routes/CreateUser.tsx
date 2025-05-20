@@ -15,7 +15,10 @@ const CreateUser = () => {
   const onSubmit = async (data: FormData) => {
     try {
       const res = await axios.post('http://localhost:3000/api/users', data);
-      console.log(res, "response")
+      console.log(res.data.data, "response")
+      let token = res.data.data?.token
+      
+      localStorage.setItem('token',token)
       alert('User created successfully');
       navigate('/users');
       reset();

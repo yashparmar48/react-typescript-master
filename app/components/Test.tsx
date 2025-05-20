@@ -2,47 +2,30 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { io, Socket } from 'socket.io-client';
 
+// Define the User type
 type User = {
   id: number;
   name: string;
   email: string;
 };
 
+// Define the socket type
 let socket: Socket | null = null;
 
 const UserList: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const fetchUsers = async () => {
-    const token = localStorage.getItem('token'); // ⬅️ get token from localStorage
+  const token: string = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im5vMW9uZUBnbWFpbC5jb20iLCJpYXQiOjE3NDc3MjI2MjAsImV4cCI6MTc0NzcyNjIyMH0.jfPDAnYVpVEg8Pm5yrhbWBPE_-Xa_uXARsPDQECkLIE`;
 
-    if (!token) {
-      console.error('No token found in localStorage.');
-      setLoading(false);
-      return;
-    }
-
+  const fetchUsers = async (): Promise<void> => {
     try {
       const response = await axios.get<{ data: User[] }>('http://localhost:3000/api/users', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-
       setUsers(response.data.data || []);
-
-      // Connect to socket server
-      socket = io('http://localhost:3000', {
-        auth: {
-          token: `Bearer ${token}`,
-        },
-      });
-
-      socket.on('connect', () => {
-        console.log('Connected to socket server:', socket?.id);
-      });
-
     } catch (err) {
       console.error('Failed to fetch users:', err);
     } finally {
@@ -53,7 +36,23 @@ const UserList: React.FC = () => {
   useEffect(() => {
     fetchUsers();
 
+    // Connect to socket server
+    socket = io('http://localhost:3000');
+
+    socket.on('connect', () => {
+      console.log('Connected to socket server:', socket?.id);
+    });
+
+    socket.on('message', (data: string) => {
+      console.log('Socket Message Received:', data);
+    });
+
+    socket.on('disconnect', () => {
+      console.log('Socket disconnected');
+    });
+
     return () => {
+      socket?.off('message');
       socket?.disconnect();
     };
   }, []);
