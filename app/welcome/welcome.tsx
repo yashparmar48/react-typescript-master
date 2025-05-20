@@ -8,11 +8,9 @@ export function Welcome() {
   const country = 'india'
   return (
     <>
-      {/* <Header country={country}/> */}
       <ImageSlider />
       <Pagination />
     </>
-
   );
 }
 
